@@ -139,13 +139,6 @@ struct NotificationSettingsTab: View {
                 Text("Alerts")
             }
 
-            Section {
-                Button("Send Test Notification") {
-                    NotificationService.shared.sendDeviceOffline(name: "Test Station")
-                }
-            } header: {
-                Text("Test")
-            }
         }
         .formStyle(.grouped)
     }

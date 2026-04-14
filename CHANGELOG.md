@@ -1,5 +1,9 @@
 # Changelog
 
-## [1.0] - Unreleased
+## [1.1] - 2026-04-14
+
+- Remove test notification from settings
+
+## [1.0] - 2026-04-14
 
 Initial release.
