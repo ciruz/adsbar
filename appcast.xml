@@ -3,14 +3,14 @@
   <channel>
     <title>ADSBar</title>
     <item>
-      <title>Version 1.0</title>
-      <sparkle:version>1.0</sparkle:version>
-      <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+      <title>Version 1.1</title>
+      <sparkle:version>1.1</sparkle:version>
+      <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/ciruz/adsbar/releases/download/v1.0/ADSBar.zip"
-        sparkle:edSignature="x5kR01jhZF3a/ULRFR2SGurAfusGAXt/+dwB7cD8f0klDkbFAxymG9wv7XIs4965YTbO/XqBrO1w/t1xSjPoBA=="
-        length="4139516"
+        url="https://github.com/ciruz/adsbar/releases/download/v1.1/ADSBar.zip"
+        sparkle:edSignature="OnEaK6RyP69yeFXxxCFiuBr+Oyp9joOudDbaKe/qmYBB8vCreCYHr70Z7Dn45YZ5cD/HTmd2CxepzdR+6Td+BA=="
+        length="4137977"
         type="application/octet-stream"/>
     </item>
   </channel>
