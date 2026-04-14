@@ -9,8 +9,8 @@
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
         url="https://github.com/ciruz/adsbar/releases/download/v1.0/ADSBar.zip"
-        sparkle:edSignature="PLACEHOLDER"
-        length="0"
+        sparkle:edSignature="x5kR01jhZF3a/ULRFR2SGurAfusGAXt/+dwB7cD8f0klDkbFAxymG9wv7XIs4965YTbO/XqBrO1w/t1xSjPoBA=="
+        length="4139516"
         type="application/octet-stream"/>
     </item>
   </channel>
