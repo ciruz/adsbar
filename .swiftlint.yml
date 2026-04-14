@@ -1,0 +1,54 @@
+included:
+  - ADSBar/ADSBar
+
+excluded:
+  - ADSBar/ADSBar/Assets.xcassets
+
+# Rules
+disabled_rules:
+  - trailing_whitespace
+  - trailing_comma
+
+opt_in_rules:
+  - unused_import
+  - force_unwrapping
+  - redundant_type_annotation
+  - empty_count
+  - closure_spacing
+  - overridden_super_call
+  - discouraged_optional_boolean
+
+line_length:
+  warning: 160
+  error: 200
+
+type_body_length:
+  warning: 400
+  error: 600
+
+file_length:
+  warning: 500
+  error: 1000
+
+function_body_length:
+  warning: 80
+  error: 150
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  allowed_symbols: ["_"]
+  excluded:
+    - id
+    - ip
+
+large_tuple:
+  warning: 4
+
+force_unwrapping:
+  severity: warning

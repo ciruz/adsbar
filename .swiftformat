@@ -1,0 +1,41 @@
+# SwiftFormat configuration for ADSBar
+
+# Indentation
+--indent 4
+--tabwidth 4
+--smarttabs disabled
+--indentcase false
+--ifdef indent
+
+# Braces
+--allman false
+
+# Wrapping
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--maxwidth 160
+
+# Spacing
+--operatorfunc spaced
+--ranges spaced
+--trimwhitespace nonblank-lines
+
+# Other
+--self remove
+--importgrouping alphabetized
+--commas inline
+--decimalgrouping 3,6
+--semicolons never
+--header ignore
+--stripunusedargs closure-only
+
+# Disabled rules
+--disable conditionalAssignment,wrapMultilineStatementBraces,docComments
+
+# Swift version
+--swiftversion 5.9
+
+# Exclusions
+--exclude ADSBar/ADSBar/Assets.xcassets

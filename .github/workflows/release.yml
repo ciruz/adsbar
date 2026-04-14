@@ -1,0 +1,241 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    env:
+      SCHEME: ADSBar
+      PROJECT: ADSBar/ADSBar.xcodeproj
+      BUNDLE_ID: com.adsbar.app
+      CONFIGURATION: Release
+      ARCHIVE_PATH: build/ADSBar.xcarchive
+      EXPORT_PATH: build/export
+      ZIP_NAME: ADSBar.zip
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Import Developer ID certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+
+          echo "$CERTIFICATE_P12" | base64 --decode > "$CERT_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH" >/dev/null
+
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+
+          rm -f "$CERT_PATH"
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Create ExportOptions.plist
+        env:
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+        run: |
+          mkdir -p build
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>developer-id</string>
+              <key>teamID</key>
+              <string>${TEAM_ID}</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>signingCertificate</key>
+              <string>Developer ID Application</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Build and archive
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration "$CONFIGURATION" \
+            -archivePath "$ARCHIVE_PATH" \
+            -destination "generic/platform=macOS" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Export archive
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist build/ExportOptions.plist \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Zip exported app
+        run: |
+          set -euo pipefail
+          cd "$EXPORT_PATH"
+          /usr/bin/ditto -c -k --keepParent "${SCHEME}.app" "../../${ZIP_NAME}"
+
+      - name: Notarize
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          xcrun notarytool submit "$ZIP_NAME" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$TEAM_ID" \
+            --password "$APP_PASSWORD" \
+            --wait
+
+      - name: Staple
+        run: |
+          set -euo pipefail
+          xcrun stapler staple "$EXPORT_PATH/${SCHEME}.app"
+          rm -f "$ZIP_NAME"
+          cd "$EXPORT_PATH"
+          /usr/bin/ditto -c -k --keepParent "${SCHEME}.app" "../../${ZIP_NAME}"
+
+      - name: Install Sparkle
+        run: |
+          set -euo pipefail
+          brew install --cask sparkle
+
+      - name: Sign update for Sparkle
+        id: sparkle
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          SIGN_TOOL="$(ls $(brew --prefix)/Caskroom/sparkle/*/bin/sign_update 2>/dev/null | head -n 1)"
+          if [ -z "$SIGN_TOOL" ] || [ ! -x "$SIGN_TOOL" ]; then
+            echo "Sparkle sign_update not found under $(brew --prefix)/Caskroom/sparkle/*/bin/" >&2
+            exit 1
+          fi
+          echo "Using sign_update at: $SIGN_TOOL"
+
+          KEY_FILE="$RUNNER_TEMP/sparkle_ed_private_key"
+          umask 077
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$KEY_FILE"
+
+          trap 'rm -f "$KEY_FILE"' EXIT
+
+          SIG_OUTPUT="$("$SIGN_TOOL" -f "$KEY_FILE" "$ZIP_NAME")"
+          echo "Sparkle output: $SIG_OUTPUT"
+          ED_SIGNATURE="$(echo "$SIG_OUTPUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')"
+          LENGTH="$(echo "$SIG_OUTPUT" | sed -n 's/.*length="\([^"]*\)".*/\1/p')"
+          if [ -z "$LENGTH" ]; then
+            LENGTH="$(stat -f%z "$ZIP_NAME")"
+          fi
+          echo "ED_SIGNATURE=$ED_SIGNATURE" >> "$GITHUB_ENV"
+          echo "FILE_SIZE=$LENGTH" >> "$GITHUB_ENV"
+
+      - name: Update appcast.xml
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import os
+          import re
+
+          version = os.environ["VERSION"]
+          tag = os.environ["TAG"]
+          ed_signature = os.environ["ED_SIGNATURE"]
+          file_size = os.environ["FILE_SIZE"]
+
+          with open("appcast.xml", "r", encoding="utf-8") as f:
+              content = f.read()
+
+          content = re.sub(r"<title>Version [^<]*</title>",
+                           f"<title>Version {version}</title>", content, count=1)
+          content = re.sub(r"<sparkle:version>[^<]*</sparkle:version>",
+                           f"<sparkle:version>{version}</sparkle:version>", content, count=1)
+          content = re.sub(r"<sparkle:shortVersionString>[^<]*</sparkle:shortVersionString>",
+                           f"<sparkle:shortVersionString>{version}</sparkle:shortVersionString>", content, count=1)
+          content = re.sub(r'url="[^"]*"',
+                           f'url="https://github.com/ciruz/adsbar/releases/download/{tag}/ADSBar.zip"',
+                           content, count=1)
+          content = re.sub(r'sparkle:edSignature="[^"]*"',
+                           f'sparkle:edSignature="{ed_signature}"', content, count=1)
+          content = re.sub(r'length="[^"]*"',
+                           f'length="{file_size}"', content, count=1)
+
+          with open("appcast.xml", "w", encoding="utf-8") as f:
+              f.write(content)
+          PY
+
+      - name: Commit updated appcast.xml
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add appcast.xml
+          if git diff --cached --quiet; then
+            echo "No appcast.xml changes to commit"
+          else
+            git commit -m "chore: update appcast.xml for ${{ steps.version.outputs.tag }}"
+            git push origin HEAD:main
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          files: ADSBar.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          if [ -n "${KEYCHAIN_PATH:-}" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi

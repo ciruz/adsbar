@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ADSBar scans your local network to discover ADS-B feeders.</string>
+	<key>SUPublicEDKey</key>
+	<string>MQlYmFXe/q0jtYRBLhWZemKWAgiKU3PK0UfxuX74ydM=</string>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/ciruz/adsbar/main/appcast.xml</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+</dict>
+</plist>
