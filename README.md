@@ -4,7 +4,7 @@ A macOS menu bar app for monitoring your ADS-B stations. Supports FR24, readsb/d
 
 ## Screenshots
 
-<img src="assets/screenshot.png" width="50%">
+<img src="assets/screenshot.png" width="75%">
 
 <img src="assets/notification.png" width="50%">
 
@@ -25,11 +25,11 @@ A macOS menu bar app for monitoring your ADS-B stations. Supports FR24, readsb/d
 
 ## Supported Station Types
 
-| Type | Port | API Endpoint | Covers |
-|------|------|-------------|--------|
-| FR24 | 8754 | `/monitor.json` | FlightRadar24 feeders |
-| readsb/dump1090 | 8080 | `/data/aircraft.json` | readsb, dump1090-fa, PiAware, ADS-B Exchange, RadarBox |
-| Planefinder | 30053 | `/ajax/stats` | Planefinder clients |
+| Type            | Port  | API Endpoint          | Covers                                                 |
+| --------------- | ----- | --------------------- | ------------------------------------------------------ |
+| FR24            | 8754  | `/monitor.json`       | FlightRadar24 feeders                                  |
+| readsb/dump1090 | 8080  | `/data/aircraft.json` | readsb, dump1090-fa, PiAware, ADS-B Exchange, RadarBox |
+| Planefinder     | 30053 | `/ajax/stats`         | Planefinder clients                                    |
 
 FR24 stations also pull data from tar1090 (`/tar1090/data/stats.json` and `/tar1090/data/aircraft.json`) when available, giving you signal stats and max range even on FR24-only setups.
 
