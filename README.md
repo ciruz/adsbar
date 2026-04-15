@@ -72,7 +72,7 @@ brew install --cask ciruz/tap/adsbar
 
 <img src="assets/add-fr.png" width="50%">
 
-<img src="assets/add-airplanes-live.png" width="75%">
+<img src="assets/add-airplanes-live.png" width="50%">
 
 **Custom Location:** If your receiver doesn't expose coordinates via `receiver.json`, you can enter latitude and longitude manually in the add/edit form. This enables max range calculation.
 
@@ -80,7 +80,7 @@ brew install --cask ciruz/tap/adsbar
 
 Polling interval (5s - 60s), distance unit (km/miles/NM), launch at login, status bar toggles, and notification preferences are in **Settings...** in the popover.
 
-<img src="assets/settings.png" width="75%">
+<img src="assets/settings.png" width="50%">
 
 ## Menu Bar
 
