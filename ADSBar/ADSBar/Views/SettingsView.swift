@@ -138,7 +138,6 @@ struct NotificationSettingsTab: View {
             } header: {
                 Text("Alerts")
             }
-
         }
         .formStyle(.grouped)
     }

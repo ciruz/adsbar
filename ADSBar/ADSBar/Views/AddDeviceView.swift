@@ -32,33 +32,43 @@ struct AddDeviceView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .font(.caption)
             .onChange(of: store.newDeviceType) { _, newType in
                 store.newDevicePort = String(newType.defaultPort)
+                if newType == .airplanesLive {
+                    store.newDeviceIP = "api.airplanes.live"
+                    store.newDeviceSSL = true
+                } else if store.newDeviceIP == "api.airplanes.live" {
+                    store.newDeviceIP = ""
+                    store.newDeviceSSL = false
+                }
             }
 
             TextField("Name (e.g. ADS-B Station #1)", text: $store.newDeviceName)
                 .textFieldStyle(.roundedBorder)
                 .font(.caption)
 
-            HStack(spacing: 8) {
-                TextField("Host / IP (e.g. 192.168.1.100)", text: $store.newDeviceIP)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.caption)
+            if store.newDeviceType != .airplanesLive {
+                HStack(spacing: 8) {
+                    TextField("Host / IP (e.g. 192.168.1.100)", text: $store.newDeviceIP)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
 
-                TextField("Port", text: $store.newDevicePort)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.caption)
-                    .frame(width: 60)
+                    TextField("Port", text: $store.newDevicePort)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                        .frame(width: 60)
 
-                Toggle("SSL", isOn: $store.newDeviceSSL)
+                    Toggle("SSL", isOn: $store.newDeviceSSL)
+                        .font(.caption)
+                }
+                .onSubmit { store.addDevice() }
+
+                TextField("Web UI path (e.g. /tar1090/)", text: $store.newDeviceWebPath)
+                    .textFieldStyle(.roundedBorder)
                     .font(.caption)
             }
-            .onSubmit { store.addDevice() }
-
-            TextField("Web UI path (e.g. /tar1090/)", text: $store.newDeviceWebPath)
-                .textFieldStyle(.roundedBorder)
-                .font(.caption)
 
             HStack(spacing: 8) {
                 TextField("Latitude", text: $store.newDeviceLat)
@@ -105,33 +115,43 @@ struct EditDeviceView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .font(.caption)
             .onChange(of: store.editType) { _, newType in
                 store.editPort = String(newType.defaultPort)
+                if newType == .airplanesLive {
+                    store.editIP = "api.airplanes.live"
+                    store.editSSL = true
+                } else if store.editIP == "api.airplanes.live" {
+                    store.editIP = ""
+                    store.editSSL = false
+                }
             }
 
             TextField("Name", text: $store.editName)
                 .textFieldStyle(.roundedBorder)
                 .font(.caption)
 
-            HStack(spacing: 8) {
-                TextField("Host / IP", text: $store.editIP)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.caption)
+            if store.editType != .airplanesLive {
+                HStack(spacing: 8) {
+                    TextField("Host / IP", text: $store.editIP)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
 
-                TextField("Port", text: $store.editPort)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.caption)
-                    .frame(width: 60)
+                    TextField("Port", text: $store.editPort)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                        .frame(width: 60)
 
-                Toggle("SSL", isOn: $store.editSSL)
+                    Toggle("SSL", isOn: $store.editSSL)
+                        .font(.caption)
+                }
+                .onSubmit { store.saveEdit() }
+
+                TextField("Web UI path (e.g. /tar1090/)", text: $store.editWebPath)
+                    .textFieldStyle(.roundedBorder)
                     .font(.caption)
             }
-            .onSubmit { store.saveEdit() }
-
-            TextField("Web UI path (e.g. /tar1090/)", text: $store.editWebPath)
-                .textFieldStyle(.roundedBorder)
-                .font(.caption)
 
             HStack(spacing: 8) {
                 TextField("Latitude", text: $store.editLat)

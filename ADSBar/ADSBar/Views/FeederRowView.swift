@@ -123,11 +123,22 @@ private struct DetailView: View {
                         Label("Map", systemImage: "map")
                             .font(.caption)
                     }
+                } else if feeder.device.stationType == .airplanesLive {
+                    Button(action: onOpenFeedStatus) {
+                        Label("My Feed", systemImage: "antenna.radiowaves.left.and.right")
+                            .font(.caption)
+                    }
+                    Button(action: onOpenWebUI) {
+                        Label("Map", systemImage: "map")
+                            .font(.caption)
+                    }
                 }
 
-                Button(action: onOpenWebUI) {
-                    Label("Web UI", systemImage: "safari")
-                        .font(.caption)
+                if feeder.device.stationType != .airplanesLive {
+                    Button(action: onOpenWebUI) {
+                        Label("Web UI", systemImage: "safari")
+                            .font(.caption)
+                    }
                 }
 
                 Spacer()
@@ -156,7 +167,7 @@ private struct DetailView: View {
         fields.append(("Type", type.displayName))
         if let alias = info.feedAlias { fields.append(("Alias", alias)) }
 
-        fields.append(("Aircraft", "\(info.aircraftTracked ?? 0)"))
+        if let ac = info.aircraftTracked { fields.append(("Aircraft", "\(ac)")) }
         if let adsb = info.aircraftADSB { fields.append(("ADS-B", "\(adsb)")) }
         if let nonAdsb = info.aircraftNonADSB { fields.append(("Non-ADSB", "\(nonAdsb)")) }
         if info.totalMessages != nil { fields.append(("Messages", info.formattedMessages)) }
@@ -171,13 +182,9 @@ private struct DetailView: View {
         }
 
         if type == .fr24 {
-            if let status = info.feedStatus { fields.append(("Feed", status)) }
-            if let rx = info.receiverConnected {
-                fields.append(("Receiver", rx ? "Connected" : "Disconnected"))
-            }
-            if let mlat = info.mlatStatus { fields.append(("MLAT", mlat)) }
-            if let connected = info.lastConnected { fields.append(("Connected", connected)) }
-            if let legacyId = info.feedLegacyId { fields.append(("Legacy ID", legacyId)) }
+            fields.append(contentsOf: buildFR24Fields(info: info))
+        } else if type == .airplanesLive {
+            fields.append(contentsOf: buildAirplanesLiveFields(info: info))
         }
 
         if let rangeKm = info.maxRangeKm {
@@ -193,6 +200,35 @@ private struct DetailView: View {
         if let version = info.version { fields.append(("Version", version)) }
         if let build = info.buildRevision { fields.append(("Build", build)) }
 
+        return fields
+    }
+
+    private func buildFR24Fields(info: FeederInfo) -> [(label: String, value: String)] {
+        var fields: [(label: String, value: String)] = []
+        if let status = info.feedStatus { fields.append(("Feed", status)) }
+        if let rx = info.receiverConnected {
+            fields.append(("Receiver", rx ? "Connected" : "Disconnected"))
+        }
+        if let mlat = info.mlatStatus { fields.append(("MLAT", mlat)) }
+        if let connected = info.lastConnected { fields.append(("Connected", connected)) }
+        if let legacyId = info.feedLegacyId { fields.append(("Legacy ID", legacyId)) }
+        return fields
+    }
+
+    private func buildAirplanesLiveFields(info: FeederInfo) -> [(label: String, value: String)] {
+        var fields: [(label: String, value: String)] = []
+        if let status = info.feedStatus { fields.append(("Feed", status)) }
+        if let clients = info.beastClients { fields.append(("Beast", "\(clients) client\(clients == 1 ? "" : "s")")) }
+        if let kbit = info.avgKbitS { fields.append(("Bandwidth", String(format: "%.1f kbit/s", kbit))) }
+        if let rtt = info.rtt { fields.append(("RTT", String(format: "%.0f ms", rtt))) }
+        if let pos = info.totalPositions { fields.append(("Positions", "\(pos)")) }
+        if let mlat = info.mlatStatus { fields.append(("MLAT", mlat)) }
+        if let rate = info.mlatMessageRate { fields.append(("MLAT Rate", String(format: "%.0f/s", rate))) }
+        if let connTime = info.connectionTime {
+            let hours = connTime / 3600
+            let minutes = (connTime % 3600) / 60
+            fields.append(("Uptime", hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"))
+        }
         return fields
     }
 }

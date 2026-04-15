@@ -198,11 +198,28 @@ final class FeederStore {
             url = feeder.device.resolvedWebURL
         case .planefinder:
             url = feeder.device.resolvedWebURL
+        case .airplanesLive:
+            if let mapLink = feeder.info?.mapLink, !mapLink.isEmpty {
+                url = URL(string: mapLink)
+            } else {
+                url = URL(string: "https://airplanes.live/myfeed/")
+            }
         }
         if let url { NSWorkspace.shared.open(url) }
     }
 
     func openWebUI(_ device: DeviceConfig) {
+        if device.stationType == .airplanesLive {
+            // For airplanes.live, the map link comes from the API response
+            if let feeder = feeders.first(where: { $0.device.id == device.id }),
+               let mapLink = feeder.info?.mapLink, !mapLink.isEmpty,
+               let url = URL(string: mapLink) {
+                NSWorkspace.shared.open(url)
+            } else if let url = URL(string: "https://globe.airplanes.live") {
+                NSWorkspace.shared.open(url)
+            }
+            return
+        }
         if let url = device.resolvedWebURL {
             NSWorkspace.shared.open(url)
         }

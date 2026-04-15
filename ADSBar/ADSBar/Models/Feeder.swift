@@ -4,6 +4,7 @@ enum StationType: String, Codable, CaseIterable, Identifiable {
     case fr24
     case readsb
     case planefinder
+    case airplanesLive
 
     var id: String {
         rawValue
@@ -14,6 +15,7 @@ enum StationType: String, Codable, CaseIterable, Identifiable {
         case .fr24: return 8754
         case .readsb: return 8080
         case .planefinder: return 30053
+        case .airplanesLive: return 443
         }
     }
 
@@ -22,6 +24,7 @@ enum StationType: String, Codable, CaseIterable, Identifiable {
         case .fr24: return "FR24"
         case .readsb: return "readsb/dump1090"
         case .planefinder: return "Planefinder"
+        case .airplanesLive: return "Airplanes.Live"
         }
     }
 
@@ -30,6 +33,7 @@ enum StationType: String, Codable, CaseIterable, Identifiable {
         case .fr24: return ""
         case .readsb: return "/tar1090/"
         case .planefinder: return "/"
+        case .airplanesLive: return ""
         }
     }
 }
@@ -76,6 +80,8 @@ struct DeviceConfig: Identifiable, Codable, Equatable, Hashable {
             return URL(string: "\(scheme)://\(ip)\(stationType.defaultWebPath)")
         case .planefinder:
             return URL(string: "\(scheme)://\(ip):\(port)\(stationType.defaultWebPath)")
+        case .airplanesLive:
+            return nil
         }
     }
 
@@ -134,6 +140,16 @@ struct FeederInfo: Codable, Equatable {
     let receiverLon: Double?
     let maxRangeKm: Double?
     let tar1090: Tar1090Stats?
+
+    // Airplanes.Live specific
+    let beastClients: Int?
+    let mlatPeers: Int?
+    let mlatMessageRate: Double?
+    let avgKbitS: Double?
+    let rtt: Double?
+    let totalPositions: Int?
+    let mapLink: String?
+    let connectionTime: Int?
 
     var formattedMessages: String {
         guard let msgs = totalMessages else { return "-" }

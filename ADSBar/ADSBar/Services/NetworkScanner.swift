@@ -30,7 +30,7 @@ actor NetworkScanner {
         await withTaskGroup(of: Void.self) { group in
             var running = 0
             for ip in ips {
-                for type in StationType.allCases {
+                for type in StationType.allCases where type != .airplanesLive {
                     if running >= 64 {
                         await group.next()
                         running -= 1
